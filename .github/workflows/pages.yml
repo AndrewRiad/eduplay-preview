@@ -8,9 +8,12 @@ name: Deploy Pages
 #
 # No `run:` steps and no interpolation of event data: nothing here can be
 # injected from issue/PR/commit text.
+# Dispatch ONLY. The deploy script pushes the build in several commits (a
+# single 400MB push breaks the connection), and an on-push trigger fired one
+# run per commit — five concurrent runs that GitHub could not allocate
+# runners for ("job was not acquired by Runner of type hosted"). The script
+# fires exactly one run after the last push.
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 permissions:

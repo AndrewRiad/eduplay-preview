@@ -1,0 +1,49 @@
+name: Deploy Pages
+
+# The legacy (branch-based) Pages builder clones the FULL repo before it can
+# publish. This repo carries every app2 preview build in its history (>1.2 GB),
+# so that clone alone ate most of Pages' 10-minute build budget and the 6 Aug
+# deploy timed out twice with a bare "Page build failed". This workflow does a
+# depth-1 checkout instead, so publish time tracks the CURRENT payload only.
+#
+# No `run:` steps and no interpolation of event data: nothing here can be
+# injected from issue/PR/commit text.
+# Dispatch ONLY. The deploy script pushes the build in several commits (a
+# single 400MB push breaks the connection), and an on-push trigger fired one
+# run per commit — five concurrent runs that GitHub could not allocate
+# runners for ("job was not acquired by Runner of type hosted"). The script
+# fires exactly one run after the last push.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - id: deployment
+        uses: actions/deploy-pages@v4
+        with:
+          # Publishing ~370MB across ~4,700 files takes GitHub longer than the
+          # action's 10-minute default wait, which is what actually failed the
+          # 6 Aug deploys ("Timeout reached, aborting!" after the artifact had
+          # uploaded successfully). Wait up to 40 minutes instead.
+          timeout: 2400000

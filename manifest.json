@@ -1,6 +1,6 @@
 {
-    "name": "ecd_activity_booklet",
-    "short_name": "ecd_activity_booklet",
+    "name": "كتيبات الأنشطة",
+    "short_name": "كتيبات الأنشطة",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
